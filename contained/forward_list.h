@@ -3,12 +3,14 @@
 //  :license: MIT, see LICENSE.md for more details.
 /**
  *  \synopsis
- *      template <typename T, typename Allocator = allocator<T>>
+ // TODO: add forward_list_facet
+ *      template <typename T, typename Alloc = allocator<T>>
  *      class forward_list
  *      {
  *      public:
  *          typedef T         value_type;
- *          typedef Allocator allocator_type;
+ *          typedef Alloc allocator_type;
+ *          typedef forward_list_facet<T, typename std::allocator_traits<Alloc>::void_pointer> facet_type;
  *          typedef value_type&                                                reference;
  *          typedef const value_type&                                          const_reference;
  *          typedef typename allocator_traits<allocator_type>::pointer         pointer;
@@ -93,26 +95,26 @@
  *          template <typename Compare> void sort(Compare comp);
  *          void reverse() noexcept;
  *      };
- *      template <typename T, typename Allocator>
- *          bool operator==(const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          bool operator< (const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          bool operator!=(const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          bool operator> (const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          bool operator>=(const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          bool operator<=(const forward_list<T, Allocator>& x,
- *                          const forward_list<T, Allocator>& y);
- *      template <typename T, typename Allocator>
- *          void swap(forward_list<T, Allocator>& x, forward_list<T, Allocator>& y)
+ *      template <typename T, typename Alloc>
+ *          bool operator==(const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          bool operator< (const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          bool operator!=(const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          bool operator> (const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          bool operator>=(const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          bool operator<=(const forward_list<T, Alloc>& x,
+ *                          const forward_list<T, Alloc>& y);
+ *      template <typename T, typename Alloc>
+ *          void swap(forward_list<T, Alloc>& x, forward_list<T, Alloc>& y)
  *               noexcept(noexcept(x.swap(y)));
  */
 
@@ -129,6 +131,7 @@
 #include <utility>
 #include <contained/detail/allocator_destructor.h>
 #include <contained/detail/compressed_pair.h>
+#include <contained/detail/swap_allocator.h>
 #include <contained/detail/util.h>
 
 
@@ -998,12 +1001,17 @@ public:
 
     explicit
     forward_list(size_type n):
-        forward_list(n, value_type())
-    {}
+        forward_list()
+    {
+        // introduces an extra copy, but saves ~100 lines of code.
+        insert_after(cbefore_begin(), n, value_type());
+    }
 
     forward_list(size_type n, const value_type& v):
-        forward_list(n, v, allocator_type())
-    {}
+        forward_list()
+    {
+        insert_after(cbefore_begin(), n, v);
+    }
 
     forward_list(size_type n, const value_type& v, const allocator_type& alloc):
         forward_list(alloc)
@@ -1013,8 +1021,10 @@ public:
 
     template <typename InputIter, enable_input_iterable_t<InputIter>* = nullptr>
     forward_list(InputIter f,InputIter l):
-        forward_list(f, l, allocator_type())
-    {}
+        forward_list()
+    {
+        insert_after(cbefore_begin(), f, l);
+    }
 
     template <typename InputIter, enable_input_iterable_t<InputIter>* = nullptr>
     forward_list(InputIter f, InputIter l, const allocator_type& alloc):
@@ -1261,6 +1271,7 @@ public:
         return iterator(r->next_);
     }
 
+public:
     iterator
     insert_after(const_iterator p, const value_type& v)
     {

@@ -20,11 +20,19 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(CONTAINED_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/deque.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/forward_list.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/list.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/string.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/vector.h
 )
 
 set(CONTAINED_TESTS
+    test/deque.cc
     test/forward_list.cc
+    test/list.cc
+    test/string.cc
+    test/vector.cc
 )
 
 add_library(contained INTERFACE)

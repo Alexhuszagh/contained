@@ -87,6 +87,16 @@ extract_stock_data(const list_facet<stock_input>& input);
 
 ## Getting Started
 
+// TODO: document
+
+## Documentation
+
+// TODO: document
+
+## Installing
+
+// TODO: document
+
 ## Contributors
 
 Alex Huszagh
@@ -97,5 +107,5 @@ Contained builds extensively off the LLVM/Clang infrastructure, and is distribut
 
 ## Contact
 
-Email: ahuszagh@gmail.com
-Twitter: @AlexHuszagh
+Email: ahuszagh@gmail.com  
+Twitter: @AlexHuszagh  
