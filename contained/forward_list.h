@@ -642,6 +642,7 @@ public:
     }
 
     // Capacity
+    CONTAINED_CPP17_NODISCARD
     bool
     empty()
     const noexcept

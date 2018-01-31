@@ -39,10 +39,7 @@
  *          list(initializer_list<value_type>, const allocator_type& a);
  *          ~list();
  *          list& operator=(const list& x);
- *          list& operator=(list&& x)
- *              noexcept(
- *                   allocator_type::propagate_on_container_move_assignment::value &&
- *                   is_nothrow_move_assignable<allocator_type>::value);
+ *          list& operator=(list&& x) noexcept;
  *          list& operator=(initializer_list<value_type>);
  *          template <class Iter>
  *              void assign(Iter first, Iter last);
@@ -700,6 +697,7 @@ public:
     }
 
     // Capacity
+    CONTAINED_CPP17_NODISCARD
     bool
     empty()
     const noexcept

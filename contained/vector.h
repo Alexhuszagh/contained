@@ -567,19 +567,82 @@ public:
     }
 
     // Assignment
-    // vector& operator=(const vector& x);
-    // vector& operator=(vector&& x);
-    // vector& operator=(std::initializer_list<value_type> il)
+    vector&
+    operator=(const vector& x)
+    {
+        if (this != &x) {
+            copy_assign_alloc(x);
+            assign(x.facet().begin_, x.facet().end_);
+        }
+        return *this;
+    }
+
+    vector&
+    operator=(vector&& x)
+    noexcept
+    {
+        move_assign(x);
+        return *this;
+    }
+
+    vector&
+    operator=(std::initializer_list<value_type> il)
+    {
+        assign(il.begin(), il.end());
+        return *this;
+    }
 
     // Assign
-    // template <typename InputIter, enable_input_iterator_t<InputIter>* = nullptr>
-    // void assign(InputIter first, InputIter last);
+    template <typename InputIter, enable_input_iterator_t<InputIter>* = nullptr>
+    void
+    assign(InputIter first, InputIter last)
+    {
+        clear();
+        for (; first != last; ++first) {
+            emplace_back(*first);
+        }
+    }
 
-    // template <typename ForwardIter, enable_forward_iterable_t<ForwardIter>* = nullptr>
-    // void assign(ForwardIter first, ForwardIter last);
+    template <typename ForwardIter, enable_forward_iterable_t<ForwardIter>* = nullptr>
+    void
+    assign(ForwardIter first, ForwardIter last)
+    {
+        clear();
+        difference_type ds = std::distance(first, last);
+        assert(ds >= 0 && "invalid range specified");
+        size_type n = static_cast<size_type>(ds);
+        if (n != 0) {
+            if (n > capacity()) {
+                deallocate();
+                allocate(n);
+            }
+            construct_at_end(first, last);
+        }
+    }
 
-    // void assign(size_type __n, const_reference __u);
-    // void assign(std::initializer_list<value_type> il)
+    void
+    assign(size_type n, const_reference x)
+    {
+        if (n <= capacity()) {
+            size_type s = size();
+            std::fill_n(facet().begin_, std::min(n, s), x);
+            if (n > s) {
+                construct_at_end(n - s, x);
+            } else {
+                destruct_at_end(facet().begin_ + n);
+            }
+        } else {
+            deallocate();
+            allocate(recommend(n));
+            construct_at_end(n, x);
+        }
+    }
+
+    void
+    assign(std::initializer_list<value_type> il)
+    {
+        assign(il.begin(), il.end());
+    }
 
     // Observers
     allocator_type
@@ -588,9 +651,6 @@ public:
     {
         return allocator_type(alloc());
     }
-
-    // TODO: Iterator one...
-    // TODO
 
     // Iterators
     iterator
@@ -707,8 +767,29 @@ public:
         return facet().capacity();
     }
 
-    // reserve
-    // shrink_to_fit
+    void
+    reserve(size_type n)
+    {
+        if (n > capacity()) {
+            allocator_type& a = alloc();
+            split_buffer<value_type> v(n, size(), a);
+            swap_out_circular_buffer(v);
+        }
+    }
+
+    void
+    shrink_to_fit()
+    noexcept
+    {
+        if (capacity() > size()) {
+            try {
+                allocator_type& a = alloc();
+                split_buffer<value_type> v(size(), size(), a);
+                swap_out_circular_buffer(v);
+            } catch (...) {
+            }
+        }
+    }
 
     // Element access
     reference
@@ -790,13 +871,42 @@ public:
     {
         destruct_at_end(facet().begin_);
     }
+
+    iterator
+    insert(const_iterator position, const_reference x)
+    {
+        pointer p = facet().begin_ + (position - begin());
+        if (facet().end_ < facet().end_cap_) {
+            if (p == facet().end_) {
+                alloc_traits::construct(alloc(), to_raw_pointer(facet().end_), x);
+                ++facet().end_;
+            } else {
+// TODO: restore
+//                move_range(p, facet().end_, p + 1);
+                const_pointer xr = pointer_traits<const_pointer>::pointer_to(x);
+                if (p <= xr && xr < facet().end_) {
+                    ++xr;
+                }
+                *p = *xr;
+            }
+        } else {
+            allocator_type& __a = this->__alloc();
+            split_buffer<value_type, allocator_type&> v(recommend(size() + 1), p - facet().begin_, __a);
+            v.push_back(x);
+            p = swap_out_circular_buffer(v, p);
+        }
+        return p;
+    }
+
     // TODO: insert
-    // TODO: push_back
-    // TODO: pop_back
-    // TODO: emplace
-    // TODO: resize
-    // TODO: swap
-    // TODO: erase
+    // iterator insert(const_iterator position, value_type&& x);
+    // iterator insert(const_iterator position, size_type n, const_reference x);
+    //
+    // template <typename InputIter, enable_input_iterator_t<InputIter>* = nullptr>
+    // iterator insert(const_iterator position, InputIter first, InputIter last)
+    //
+    // template <typename ForwardIter, enable_forward_iterable_t<ForwardIter>* = nullptr>
+    // iterator insert(const_iterator position, ForwardIter first, ForwardIter last)
 
     template <typename ... Ts>
     iterator
@@ -979,7 +1089,91 @@ private:
         return std::max<size_type>(ratio*cap, new_size);
     }
 
+    // Copy Assign Alloc
+    void
+    copy_assign_alloc(const vector& x, std::true_type)
+    {
+        if (alloc() != x.alloc()) {
+            clear();
+        }
+        alloc() = x.alloc();
+    }
+
+    void
+    copy_assign_alloc(const vector&, std::false_type)
+    {}
+
+    void
+    copy_assign_alloc(const vector& x)
+    {
+        constexpr bool propagate = alloc_traits::propagate_on_container_copy_assignment::value;
+        copy_assign_alloc(x, std::integral_constant<bool, propagate>());
+    }
+
+    // Move Assign Alloc
+    void
+    move_assign_alloc(vector& x, std::true_type)
+    noexcept
+    {
+        alloc() = move(x.alloc());
+    }
+
+    void
+    move_assign_alloc(vector&, std::false_type)
+    noexcept
+    {}
+
+    void
+    move_assign_alloc(vector& x)
+    noexcept
+    {
+        constexpr bool propagate = alloc_traits::propagate_on_container_move_assignment::value;
+        move_assign_alloc(x, std::integral_constant<bool, propagate>());
+    }
+
+    // Move Assign
+    void
+    move_assign(vector& x, std::true_type)
+    {
+        deallocate();
+        move_assign_alloc(x);
+        facet().begin_ = x.begin_;
+        facet().end_ = x.end_;
+        facet().end_cap_ = x.end_cap_;
+        x.begin_ = x.end_ = x.end_cap_ = nullptr;
+    }
+
+    void
+    move_assign(vector& x, std::false_type)
+    {
+        if (alloc() == x.alloc()) {
+            move_assign(x, std::true_type());
+        } else {
+            using iter = std::move_iterator<iterator>;
+            assign(iter(x.begin()), iter(x.end()));
+        }
+    }
+
+    void
+    move_assign(vector& x)
+    {
+        constexpr bool propagate = alloc_traits::propagate_on_container_move_assignment::value;
+        move_assign(x, std::integral_constant<bool, propagate>());
+    }
+
     // TODO: need assign allocs...
+
+    // Deallocate
+    void
+    deallocate()
+    noexcept
+    {
+        if (facet().begin_ != nullptr) {
+            clear();
+            alloc_traits::deallocate(alloc(), facet().begin_, capacity());
+            facet().begin_ = facet().end_ = facet().end_cap_ = nullptr;
+        }
+    }
 
     // Object destruction
     void
