@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <iterator>
+#include <memory>
 #include <type_traits>
 
 namespace contained
@@ -16,6 +18,12 @@ namespace contained
 #   define CONTAINED_CPP14_CONSTEXPR constexpr
 #else
 #   define CONTAINED_CPP14_CONSTEXPR
+#endif
+
+#if __cplusplus >= 2017
+#   define CONTAINED_CPP17_NODISCARD [[ nodiscard ]]
+#else
+#   define CONTAINED_CPP17_NODISCARD
 #endif
 
 /**
@@ -43,15 +51,61 @@ namespace contained
 
 // SFINAE
 // ------
+
+template <typename T>
+using is_input_iterator = std::is_same<
+    std::input_iterator_tag,
+    typename std::iterator_traits<T>::iterator_category
+>;
+
 template <typename T>
 using is_input_iterable = std::is_base_of<
     std::input_iterator_tag,
     typename std::iterator_traits<T>::iterator_category
 >;
 
+template <typename T>
+using is_forward_iterable = std::is_base_of<
+    std::forward_iterator_tag,
+    typename std::iterator_traits<T>::iterator_category
+>;
+
+template <typename T, typename R = void>
+using enable_input_iterator_t = typename std::enable_if<
+    is_input_iterator<T>::value, R
+>::type;
+
 template <typename T, typename R = void>
 using enable_input_iterable_t = typename std::enable_if<
     is_input_iterable<T>::value, R
 >::type;
+
+template <typename T, typename R = void>
+using enable_forward_iterable_t = typename std::enable_if<
+    is_forward_iterable<T>::value, R
+>::type;
+
+// TODO: is_relocatable....
+
+// FUNCTIONS
+// ---------
+
+template <typename T>
+inline constexpr
+T*
+to_raw_pointer(T* p)
+noexcept
+{
+    return p;
+}
+
+template <typename Pointer>
+inline
+typename std::pointer_traits<Pointer>::element_type*
+to_raw_pointer(Pointer p)
+noexcept
+{
+    return to_raw_pointer(p.operator->());
+}
 
 }   /* contained */

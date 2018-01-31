@@ -2,9 +2,6 @@
 //  :copyright: (c) 2017-2018 Alex Huszagh.
 //  :license: MIT, see licenses/mit.md for more details.
 /**
- *  \addtogroup PySTD
- *  \brief STL list with allocator erasure from iterators.
- *
  *  \synopsis
  // TODO: add list_facet
  *      template <class T, class Alloc = allocator<T> >
@@ -1096,11 +1093,13 @@ protected:
 
 public:
     // Constructors
-    list() noexcept
+    list()
+    noexcept
     {}
 
     explicit
-    list(const allocator_type& alloc):
+    list(const allocator_type& alloc)
+    noexcept:
         data_(alloc)
     {}
 

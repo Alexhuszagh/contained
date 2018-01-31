@@ -519,7 +519,7 @@ protected:
 
     forward_list_facet(forward_list_facet&& x)
     noexcept:
-        before_begin_(move(x.before_begin_))
+        before_begin_(std::move(x.before_begin_))
     {
         x.begin_pointer() = nullptr;
     }
@@ -668,7 +668,7 @@ public:
     void
     merge(forward_list_facet&& x, Compare comp)
     {
-        merge(x, move(comp));
+        merge(x, std::move(comp));
     }
 
     void
@@ -995,7 +995,8 @@ public:
     {}
 
     explicit
-    forward_list(const allocator_type& alloc):
+    forward_list(const allocator_type& alloc)
+    noexcept:
         data_(node_allocator(alloc))
     {}
 
@@ -1265,7 +1266,7 @@ public:
         node_allocator& a = alloc();
         using deleter = allocator_destructor<node_allocator, 1>;
         std::unique_ptr<node, deleter> h(node_traits::allocate(a, 1), deleter(a));
-        node_traits::construct(a, std::addressof(h->value_), move(v));
+        node_traits::construct(a, std::addressof(h->value_), std::move(v));
         h->next_ = r->next_;
         r->next_ = h.release();
         return iterator(r->next_);
@@ -1524,7 +1525,7 @@ public:
     void
     splice_after(const_iterator p, forward_list&& x, const_iterator i)
     {
-        facet().splice_after(p, move(x.facet()), i);
+        facet().splice_after(p, std::move(x.facet()), i);
     }
 
     void
@@ -1535,7 +1536,7 @@ public:
         const_iterator l
     )
     {
-        facet().splice_after(p, move(x.facet()), f, l);
+        facet().splice_after(p, std::move(x.facet()), f, l);
     }
 
     void
@@ -1629,7 +1630,7 @@ public:
     void
     sort(Compare comp)
     {
-        facet().sort(move(comp));
+        facet().sort(std::move(comp));
     }
 
     // Facet
@@ -1691,7 +1692,7 @@ private:
     move_assign_alloc(forward_list& x, std::true_type)
     noexcept
     {
-        alloc() = move(x.alloc());
+        alloc() = std::move(x.alloc());
     }
 
     void

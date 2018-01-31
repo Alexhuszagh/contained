@@ -93,6 +93,10 @@ extract_stock_data(const list_facet<stock_input>& input);
 
 // TODO: document
 
+## Finer Details
+
+For contiguous buffers, like `vector`,`deque`, and `string`, contained uses relocation whenever possible for performance optimizations (using `memcpy`, rather than move constructors).
+
 ## Installing
 
 // TODO: document
