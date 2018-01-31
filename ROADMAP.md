@@ -2,11 +2,11 @@
 
     - forward_list - Completed
     - list - Completed
-    - split_buffer
-        - Need to rework to remove the allocator.
-    - vector
-    - deque
+    - split_buffer - Completed
+    - vector - Completed
+        - vector<bool>
     - string
+    - deque
     - map
     - multimap
     - set

@@ -92,6 +92,7 @@
 
 #pragma once
 
+#include <contained/detail/relocate.h>
 #include <contained/detail/split_buffer.h>
 #include <cassert>
 #include <functional>
@@ -129,7 +130,6 @@ public:
         end_(nullptr),
         end_cap_(nullptr)
     {}
-    // TODO: add iterator, other methods
 
     // Iterators
     iterator
@@ -332,8 +332,6 @@ public:
         return static_cast<size_type>(end_cap_ - begin_);
     }
 
-    // TODO: add more methods
-
 protected:
     pointer begin_;
     pointer end_;
@@ -369,8 +367,6 @@ protected:
         std::swap(end_, x.end_);
         std::swap(end_cap_, x.end_cap_);
     }
-
-    // TODO: private constructors, modifiers, etc...
 };
 
 // VECTOR
@@ -400,8 +396,6 @@ public:
     using const_iterator = typename facet_type::const_iterator;
     using reverse_iterator = typename facet_type::reverse_iterator;
     using const_reverse_iterator = typename facet_type::const_reverse_iterator;
-
-    // TODO: add here...
 
     // Constructors
     vector()
@@ -772,7 +766,7 @@ public:
     {
         if (n > capacity()) {
             allocator_type& a = alloc();
-            split_buffer<value_type> v(n, size(), a);
+            buffer_type v(n, size(), a);
             swap_out_circular_buffer(v);
         }
     }
@@ -784,7 +778,7 @@ public:
         if (capacity() > size()) {
             try {
                 allocator_type& a = alloc();
-                split_buffer<value_type> v(size(), size(), a);
+                buffer_type v(size(), size(), a);
                 swap_out_circular_buffer(v);
             } catch (...) {
             }
@@ -881,32 +875,139 @@ public:
                 alloc_traits::construct(alloc(), to_raw_pointer(facet().end_), x);
                 ++facet().end_;
             } else {
-// TODO: restore
-//                move_range(p, facet().end_, p + 1);
-                const_pointer xr = pointer_traits<const_pointer>::pointer_to(x);
+                relocate(p, facet().end_, p + 1);
+                const_pointer xr = std::pointer_traits<const_pointer>::pointer_to(x);
                 if (p <= xr && xr < facet().end_) {
                     ++xr;
                 }
                 *p = *xr;
             }
         } else {
-            allocator_type& __a = this->__alloc();
-            split_buffer<value_type, allocator_type&> v(recommend(size() + 1), p - facet().begin_, __a);
+            allocator_type& a = alloc();
+            split_buffer<value_type, allocator_type&> v(recommend(size() + 1), p - facet().begin_, a);
             v.push_back(x);
             p = swap_out_circular_buffer(v, p);
         }
         return p;
     }
 
-    // TODO: insert
-    // iterator insert(const_iterator position, value_type&& x);
-    // iterator insert(const_iterator position, size_type n, const_reference x);
-    //
-    // template <typename InputIter, enable_input_iterator_t<InputIter>* = nullptr>
-    // iterator insert(const_iterator position, InputIter first, InputIter last)
-    //
-    // template <typename ForwardIter, enable_forward_iterable_t<ForwardIter>* = nullptr>
-    // iterator insert(const_iterator position, ForwardIter first, ForwardIter last)
+    iterator
+    insert(const_iterator position, value_type&& x)
+    {
+        pointer p = facet().begin_ + (position - begin());
+        if (facet().end_ < facet().end_cap_) {
+            if (p == facet().end_) {
+                alloc_traits::construct(alloc(), to_raw_pointer(facet().end_), std::move(x));
+                ++facet().end_;
+            } else {
+                relocate(p, facet().end_, p + 1);
+                *p = std::move(x);
+            }
+        } else {
+            allocator_type& a = alloc();
+            split_buffer<value_type, allocator_type&> v(recommend(size() + 1), p - facet().begin_, a);
+            v.push_back(std::move(x));
+            p = swap_out_circular_buffer(v, p);
+        }
+        return p;
+    }
+
+    iterator
+    insert(const_iterator position, size_type n, const_reference x)
+    {
+        pointer p = facet().begin_ + (position - begin());
+        if (n > 0) {
+            if (n <= static_cast<size_type>(facet().end_cap() - facet().end_)) {
+                size_type old_n = n;
+                pointer old_last = facet().end_;
+                if (n > static_cast<size_type>(facet().end_ - p)) {
+                    size_type cx = n - (facet().end_ - p);
+                    construct_at_end(cx, x);
+                    n -= cx;
+                }
+                if (n > 0) {
+                    relocate_n(p, old_last, p + old_n);
+                    const_pointer xr = std::pointer_traits<const_pointer>::pointer_to(x);
+                    if (p <= xr && xr < facet().end_) {
+                        xr += old_n;
+                    }
+                    std::fill_n(p, n, *xr);
+                }
+            } else {
+                allocator_type& a = alloc();
+                buffer_type v(recommend(size() + n), p - facet().begin_, a);
+                v.construct_at_end(a, n, x);
+                p = swap_out_circular_buffer(v, p);
+            }
+        }
+        return p;
+    }
+
+    template <typename InputIter, enable_input_iterator_t<InputIter>* = nullptr>
+    iterator
+    insert(const_iterator position, InputIter first, InputIter last)
+    {
+        difference_type off = position - begin();
+        pointer p = facet().begin_ + off;
+        allocator_type& a = alloc();
+        pointer old_last = facet().end_;
+        for (; facet().end_ != facet().end_cap_ && first != last; ++first) {
+            alloc_traits::construct(a, to_raw_pointer(facet().end_), *first);
+            ++facet().end_;
+        }
+        buffer_type v;
+        if (first != last) {
+            try {
+                v.construct_at_end(a, first, last);
+                difference_type old_size = old_last - facet().begin_;
+                difference_type old_p = p - facet().begin_;
+                reserve(recommend(size() + v.size()));
+                p = facet().begin_ + old_p;
+                old_last = facet().begin_ + old_size;
+            } catch (...) {
+                erase(old_last, end());
+                throw;
+            }
+        }
+        p = std::rotate(p, old_last, facet().end_);
+        using iter = std::move_iterator<iterator>;
+        insert(p, iter(v.begin()), iter(v.end()));
+        alloc_traits::deallocate(alloc(), v.first_, v.capacity());
+
+        return begin() + off;
+    }
+
+    template <typename ForwardIter, enable_forward_iterable_t<ForwardIter>* = nullptr>
+    iterator insert(const_iterator position, ForwardIter first, ForwardIter last)
+    {
+        pointer p = facet().begin_ + (position - begin());
+        difference_type n = std::distance(first, last);
+        if (n > 0) {
+            if (n <= facet().end_cap_ - facet().end_) {
+                size_type old_n = n;
+                pointer old_last = facet().end_;
+                ForwardIter m = last;
+                difference_type dx = facet().end_ - p;
+                if (n > dx) {
+                    m = first;
+                    difference_type diff = facet().end_ - p;
+                    std::advance(m, diff);
+                    construct_at_end(m, last, n - diff);
+                    n = dx;
+                }
+                if (n > 0) {
+                    relocate(p, old_last, p + old_n);
+                    std::copy(first, m, p);
+                }
+            } else {
+                allocator_type& a = alloc();
+                buffer_type v(recommend(size() + n), p - facet().begin_, a);
+                v.construct_at_end(a, first, last);
+                p = swap_out_circular_buffer(v, p);
+            }
+        }
+        return p;
+    }
 
     template <typename ... Ts>
     iterator
@@ -918,7 +1019,7 @@ public:
                 alloc_traits::construct(alloc(), to_raw_pointer(facet().end_), std::forward<Ts>(ts)...);
                 ++facet().end_;
             } else {
-                relocate_n(p, facet().end_, p+1);
+                relocate(p, facet().end_, p+1);
                 ++facet().end_;
                 alloc_traits::construct(alloc(), to_raw_pointer(p), std::forward<Ts>(ts)...);
             }
@@ -1160,8 +1261,6 @@ private:
         constexpr bool propagate = alloc_traits::propagate_on_container_move_assignment::value;
         move_assign(x, std::integral_constant<bool, propagate>());
     }
-
-    // TODO: need assign allocs...
 
     // Deallocate
     void

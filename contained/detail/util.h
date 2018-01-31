@@ -13,14 +13,22 @@ namespace contained
 // MACROS
 // ------
 
-// Constexpr does not imply const after C++14.
 #if __cplusplus >= 201402L
+#   define CONTAINED_CPP14
+#endif
+
+#if __cplusplus >= 201703L
+#   define CONTAINED_CPP17
+#endif
+
+// Constexpr does not imply const after C++14.
+#if defined(CONTAINED_CPP14)
 #   define CONTAINED_CPP14_CONSTEXPR constexpr
 #else
 #   define CONTAINED_CPP14_CONSTEXPR
 #endif
 
-#if __cplusplus >= 2017
+#if defined(CONTAINED_CPP17)
 #   define CONTAINED_CPP17_NODISCARD [[ nodiscard ]]
 #else
 #   define CONTAINED_CPP17_NODISCARD
@@ -84,8 +92,6 @@ template <typename T, typename R = void>
 using enable_forward_iterable_t = typename std::enable_if<
     is_forward_iterable<T>::value, R
 >::type;
-
-// TODO: is_relocatable....
 
 // FUNCTIONS
 // ---------
