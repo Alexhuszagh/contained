@@ -77,6 +77,32 @@ protected:
         value_type data_[min_cap];
     };
 
+    union ulx
+    {
+        long_layout lx;
+        short_layout lxx;
+    };
+
+    enum {
+        n_words = sizeof(ulx) / sizeof(size_type)
+    };
+
+    struct raw
+    {
+        size_type words[n_words];
+    };
+
+    struct rep
+    {
+        union
+        {
+            long_layout l;
+            short_layout s;
+            raw r;
+        };
+    };
+
+    rep r_;
 };
 
 // STRING

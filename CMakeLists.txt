@@ -20,10 +20,20 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(CONTAINED_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/allocator_destructor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/compressed_pair.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/destroy.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/endian.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/relocate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/split_buffer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/swap_allocator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/uninitialized.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/util.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/deque.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/forward_list.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/list.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/string.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/string_view.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/vector.h
 )
 
@@ -32,6 +42,7 @@ set(CONTAINED_TESTS
     test/forward_list.cc
     test/list.cc
     test/string.cc
+    test/string_view.cc
     test/vector.cc
 )
 

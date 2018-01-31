@@ -78,8 +78,17 @@ inline
 void
 relocate_n(P1 src_first, Size n, P2 dst_first)
 {
-    using value_type = typename std::pointer_traits<P1>::element_type;
-    using relocatable = is_relocatable<P1>;
+    // Only relocate if the underlying value_type is relocatable,
+    // and the pointer is a raw pointer. Other pointer types,
+    // like `offset_ptr`, which used for shared memory, may be
+    // catastrophic.
+    using pointer = typename std::remove_cv<P1>::type;
+    using value_type = typename std::pointer_traits<pointer>::element_type;
+    using relocatable = std::integral_constant<
+        bool,
+        is_relocatable<value_type>::value && std::is_same<pointer, value_type*>::value
+    >;
+
     relocate_n_impl(src_first, n, dst_first, relocatable());
 }
 
@@ -91,6 +100,5 @@ relocate(P1 src_first, P1 src_last, P2 dst_first)
 
     relocate_n(src_first, std::distance(src_first, src_last), dst_first);
 }
-
 
 }   /* contained */

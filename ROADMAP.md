@@ -5,6 +5,7 @@
     - split_buffer - Completed
     - vector - Completed
         - vector<bool>
+    - string_view - Completed
     - string
     - deque
     - map
