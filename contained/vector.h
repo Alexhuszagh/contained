@@ -92,6 +92,7 @@
 
 #pragma once
 
+#include <contained/detail/growth.h>
 #include <contained/detail/relocate.h>
 #include <contained/detail/split_buffer.h>
 #include <cassert>
@@ -526,6 +527,26 @@ public:
         }
     }
 
+    vector(const facet_type& x):
+        vector()
+    {
+        size_type n = x.size();
+        if (n > 0) {
+            allocate(n);
+            construct_at_end(x.begin_, x.end_, n);
+        }
+    }
+
+    vector(const facet_type& x, const allocator_type& alloc):
+        vector(alloc)
+    {
+        size_type n = x.size();
+        if (n > 0) {
+            allocate(n);
+            construct_at_end(x.begin_, x.end_, n);
+        }
+    }
+
     // Move Constructors
     vector(vector&& x)
     noexcept:
@@ -567,6 +588,15 @@ public:
         if (this != &x) {
             copy_assign_alloc(x);
             assign(x.facet().begin_, x.facet().end_);
+        }
+        return *this;
+    }
+
+    vector&
+    operator=(const facet_type& x)
+    {
+        if (facet() != &x) {
+            assign(x.begin_, x.end_);
         }
         return *this;
     }
@@ -1172,9 +1202,7 @@ private:
     recommend(size_type new_size)
     {
         // get ratio properties
-        constexpr unsigned num = CONTAINED_GROWTH_FACTOR_NUMERATOR;
-        constexpr unsigned den = CONTAINED_GROWTH_FACTOR_DENOMINATOR;
-        constexpr double ratio = static_cast<double>(num) / den;
+        constexpr double ratio = CONTAINED_GROWTH_RATIO;
 
         // check max size
         size_type ms = max_size();

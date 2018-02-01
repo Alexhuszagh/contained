@@ -1,5 +1,10 @@
 # Container Progress
 
+    - Next constructors && assignment from facets.
+        - forward_list - Completed
+        - list - Completed
+        - vector - Completed
+
     - forward_list - Completed
     - list - Completed
     - split_buffer - Completed
@@ -49,3 +54,11 @@
     - robin_multimap
     - robin_set
     - robin_multiset
+
+## Other Projects
+
+- Use XXHash to create a standalone STL hash.
+- New IOStreams library, including UTF-8 fstreams.
+- Export PyCPP lexical to its own module.
+- Custom allocator project, using Boost pool and chained allocators.
+- Custom filesystem library.

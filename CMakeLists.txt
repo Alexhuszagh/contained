@@ -21,28 +21,51 @@ endif()
 
 set(CONTAINED_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/allocator_destructor.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/btree.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/compressed_pair.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/destroy.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/endian.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/growth.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/hash_table.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/rb_tree.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/relocate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/robin.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/split_buffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/swap_allocator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/uninitialized.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/detail/util.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/btree_map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/btree_set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/deque.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/forward_list.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/list.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/robin_map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/robin_set.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/rope.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/string.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/string_view.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/unordered_map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/contained/unordered_set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/contained/vector.h
 )
 
 set(CONTAINED_TESTS
+    test/btree_map.cc
+    test/btree_set.cc
     test/deque.cc
     test/forward_list.cc
     test/list.cc
+    test/map.cc
+    test/robin_map.cc
+    test/robin_set.cc
+    test/rope.cc
+    test/set.cc
     test/string.cc
     test/string_view.cc
+    test/unordered_map.cc
+    test/unordered_set.cc
     test/vector.cc
 )
 

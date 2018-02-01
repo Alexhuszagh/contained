@@ -956,13 +956,14 @@ template <
 >
 class forward_list
 {
+protected:
+    using alloc_traits = std::allocator_traits<Allocator>;
+    using void_pointer = typename alloc_traits::void_pointer;
+
 public:
     using value_type = T;
     using allocator_type = Allocator;
-    using facet_type = forward_list_facet<
-        value_type,
-        typename std::allocator_traits<allocator_type>::void_pointer
-    >;
+    using facet_type = forward_list_facet<value_type, void_pointer>;
     using reference = value_type&;
     using const_reference = const value_type&;
     using pointer = typename facet_type::pointer;
@@ -978,7 +979,6 @@ protected:
         "Allocator::value_type must be same type as value_type"
     );
 
-    using alloc_traits = std::allocator_traits<allocator_type>;
     using node = typename facet_type::node;
     using node_pointer = typename facet_type::node_pointer;
     using node_allocator = typename alloc_traits::template rebind_alloc<node>;
@@ -1045,6 +1045,18 @@ public:
         insert_after(cbefore_begin(), x.begin(), x.end());
     }
 
+    forward_list(const facet_type& x):
+        forward_list()
+    {
+        insert_after(cbefore_begin(), x.begin(), x.end());
+    }
+
+    forward_list(const facet_type& x, const allocator_type& alloc):
+        forward_list(alloc)
+    {
+        insert_after(cbefore_begin(), x.begin(), x.end());
+    }
+
     forward_list(forward_list&& x):
         data_(std::move(x.facet()))
     {}
@@ -1088,6 +1100,15 @@ public:
     noexcept
     {
         move_assign(x);
+        return *this;
+    }
+
+    forward_list&
+    operator=(const facet_type& x)
+    {
+        if (facet() != &x) {
+            assign(x.begin(), x.end());
+        }
         return *this;
     }
 

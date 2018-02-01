@@ -15,6 +15,7 @@
 #pragma once
 
 #include <contained/detail/compressed_pair.h>
+#include <contained/detail/growth.h>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -25,19 +26,6 @@
 
 namespace contained
 {
-// MACROS
-// ------
-
-// Buffer growth factor of 2.0 is the worst possible.
-//      https://github.com/facebook/folly/blob/master/folly/docs/FBVector.md#memory-handling
-#ifndef CONTAINED_GROWTH_FACTOR_NUMERATOR
-#   define CONTAINED_GROWTH_FACTOR_NUMERATOR 3
-#endif
-
-#ifndef CONTAINED_GROWTH_FACTOR_DENOMINATOR
-#   define CONTAINED_GROWTH_FACTOR_DENOMINATOR 2
-#endif
-
 // OBJECTS
 // -------
 
@@ -241,9 +229,7 @@ public:
     internal_resize(Allocator& alloc)
     {
         // get the ratio for our growth
-        constexpr unsigned num = CONTAINED_GROWTH_FACTOR_NUMERATOR;
-        constexpr unsigned den = CONTAINED_GROWTH_FACTOR_DENOMINATOR;
-        constexpr double ratio = static_cast<double>(num) / den;
+        constexpr double ratio = CONTAINED_GROWTH_RATIO;
         constexpr unsigned inum = AlignBack ? 3 : 0;
 
         // get reallocation size, max(ratio * capacity(), 1);
