@@ -3,11 +3,98 @@
 //  :license: MIT, see licenses/mit.md for more details.
 /**
  *  \synopsis
- // TODO: implement.
+ *      template<class Char, class traits = std::char_traits<Char>>
+ *      class basic_string_view
+ *      {
+ *      public:
+ *          typedef traits traits_type;
+ *          typedef Char value_type;
+ *          typedef Char* pointer;
+ *          typedef const Char* const_pointer;
+ *          typedef Char& reference;
+ *          typedef const Char& const_reference;
+ *          typedef implementation-defined const_iterator;
+ *          typedef const_iterator iterator;
+ *          typedef reverse_iterator<const_iterator> const_reverse_iterator;
+ *          typedef const_reverse_iterator reverse_iterator;
+ *          typedef size_t size_type;
+ *          typedef ptrdiff_t difference_type;
+ *
+ *          static constexpr size_type npos = size_type(-1);
+ *
+ *          constexpr basic_string_view() noexcept;
+ *          constexpr basic_string_view(const basic_string_view&) noexcept = default;
+ *          basic_string_view& operator=(const basic_string_view&) noexcept = default;
+ *          constexpr basic_string_view(const Char* str);
+ *          constexpr basic_string_view(const Char* str, size_type len);
+ *
+ *          constexpr const_iterator begin() const noexcept;
+ *          constexpr const_iterator end() const noexcept;
+ *          constexpr const_iterator cbegin() const noexcept;
+ *          constexpr const_iterator cend() const noexcept;
+ *          const_reverse_iterator rbegin() const noexcept;
+ *          const_reverse_iterator rend() const noexcept;
+ *          const_reverse_iterator crbegin() const noexcept;
+ *          const_reverse_iterator crend() const noexcept;
+ *
+ *          constexpr size_type size() const noexcept;
+ *          constexpr size_type length() const noexcept;
+ *          constexpr size_type max_size() const noexcept;
+ *          constexpr bool empty() const noexcept;
+ *
+ *          constexpr const_reference operator[](size_type pos) const;
+ *          constexpr const_reference at(size_type pos) const;
+ *          constexpr const_reference front() const;
+ *          constexpr const_reference back() const;
+ *          constexpr const_pointer data() const noexcept;
+ *
+ *          constexpr void remove_prefix(size_type n);
+ *          constexpr void remove_suffix(size_type n);
+ *          constexpr void swap(basic_string_view& s) noexcept;
+ *          size_type copy(Char* s, size_type n, size_type pos = 0) const;
+ *          constexpr basic_string_view substr(size_type pos = 0, size_type n = npos) const;
+ *          constexpr int compare(basic_string_view s) const noexcept;
+ *          constexpr int compare(size_type pos1, size_type n1, basic_string_view s) const;
+             *nstexpr int compare(size_type pos1, size_type n1, basic_string_view s, size_type pos2, size_type n2) const;
+ *          constexpr int compare(const Char* s) const;
+ *          constexpr int compare(size_type pos1, size_type n1, const Char* s) const;
+ *          constexpr int compare(size_type pos1, size_type n1, const Char* s, size_type n2) const;
+ *          constexpr size_type find(basic_string_view s, size_type pos = 0) const noexcept;
+ *          constexpr size_type find(Char c, size_type pos = 0) const noexcept;
+ *          constexpr size_type find(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type find(const Char* s, size_type pos = 0) const;
+ *          constexpr size_type rfind(basic_string_view s, size_type pos = npos) const noexcept;
+ *          constexpr size_type rfind(Char c, size_type pos = npos) const noexcept;
+ *          constexpr size_type rfind(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type rfind(const Char* s, size_type pos = npos) const;
+ *          constexpr size_type find_first_of(basic_string_view s, size_type pos = 0) const noexcept;
+ *          constexpr size_type find_first_of(Char c, size_type pos = 0) const noexcept;
+ *          constexpr size_type find_first_of(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type find_first_of(const Char* s, size_type pos = 0) const;
+ *          constexpr size_type find_last_of(basic_string_view s, size_type pos = npos) const noexcept;
+ *          constexpr size_type find_last_of(Char c, size_type pos = npos) const noexcept;
+ *          constexpr size_type find_last_of(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type find_last_of(const Char* s, size_type pos = npos) const;
+ *          constexpr size_type find_first_not_of(basic_string_view s, size_type pos = 0) const noexcept;
+ *          constexpr size_type find_first_not_of(Char c, size_type pos = 0) const noexcept;
+ *          constexpr size_type find_first_not_of(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type find_first_not_of(const Char* s, size_type pos = 0) const;
+ *          constexpr size_type find_last_not_of(basic_string_view s, size_type pos = npos) const noexcept;
+ *          constexpr size_type find_last_not_of(Char c, size_type pos = npos) const noexcept;
+ *          constexpr size_type find_last_not_of(const Char* s, size_type pos, size_type n) const;
+ *          constexpr size_type find_last_not_of(const Char* s, size_type pos = npos) const;
+ *          constexpr bool starts_with(basic_string_view s) const noexcept;
+ *          constexpr bool starts_with(Char c) const noexcept;
+ *          constexpr bool starts_with(const Char* s) const;
+ *          constexpr bool ends_with(basic_string_view s) const noexcept;
+ *          constexpr bool ends_with(Char c) const noexcept;
+ *          constexpr bool ends_with(const Char* s) const;
+ *      };
  */
 
 #pragma once
 
+#include <contained/detail/util.h>
 #include <algorithm>
 #include <cassert>
 #include <functional>
@@ -95,15 +182,6 @@ public:
         length_(traits_type::length(str))
     {}
 
-    // We cannot extend std::basic_string, so provide overloads for
-    // `basic_string_view(const basic_string&)`.
-    template <typename Allocator>
-    basic_string_view(const std::basic_string<Char, Traits, Allocator>& str)
-    noexcept:
-        data_(str.data()),
-        length_(str.length())
-    {}
-
     // Assignment
     basic_string_view& operator=(const basic_string_view& str) noexcept = default;
 
@@ -186,6 +264,7 @@ public:
         return std::numeric_limits<size_type>::max();
     }
 
+    CONTAINED_CPP17_NODISCARD
     bool
     empty()
     const noexcept
@@ -489,7 +568,7 @@ public:
             return npos;
         }
 
-        const_iterator it = find_first_of(cbegin() + pos, cend(), s.cbegin(), s.cend(), traits_type::eq);
+        auto it = std::find_first_of(cbegin() + pos, cend(), s.cbegin(), s.cend(), traits_type::eq);
         return it == cend() ? npos : std::distance(cbegin(), it);
     }
 
@@ -533,7 +612,7 @@ public:
             pos = size() - (pos+1);
         }
 
-        const_reverse_iterator iter = find_first_of(crbegin() + pos, crend(), s.cbegin(), s.cend(), traits_type::eq);
+        auto iter = std::find_first_of(crbegin() + pos, crend(), s.cbegin(), s.cend(), traits_type::eq);
         if (iter == crend()) {
             return npos;
         }
@@ -648,21 +727,9 @@ public:
         return find_last_not_of(basic_string_view(s), pos);
     }
 
-    // Conversion
-    // In C++17, `basic_string` has a constructor from
-    // `basic_string_view` we need to emulate.
-    template <typename Allocator>
-    explicit
-    operator std::basic_string<Char, Traits, Allocator>()
-    const
-    {
-        using string_type = std::basic_string<Char, Traits, Allocator>;
-        return string_type(data(), size());
-    }
-
 private:
-    const_pointer data_;
-    size_t length_;
+    const_pointer data_ = nullptr;
+    size_t length_= 0;
 };
 
 // HELPERS
@@ -670,7 +737,7 @@ private:
 template <typename Iter, typename Char, typename Traits>
 static
 Iter
-find_not_of(Iter first, Iter last, basic_string_view<Char, Traits> s)
+find_not_of_impl(Iter first, Iter last, basic_string_view<Char, Traits> s)
 noexcept
 {
     //  :copyright: (c) 2012-2015 Marshall Clow.
@@ -687,6 +754,11 @@ noexcept
     }
     return last;
 }
+
+template <typename Char, typename Traits>
+const typename
+basic_string_view<Char, Traits>::size_type
+basic_string_view<Char, Traits>::npos;
 
 // OPERATORS
 
@@ -773,5 +845,6 @@ operator<<(
 }
 
 // TODO: specialize hash....
+// This isn't easy....
 
 }   /* contained */

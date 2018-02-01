@@ -6,7 +6,14 @@
  *  Abstraction to allocate ephemeral objects without resource leaks.
  *
  *  \synopsis
- // TODO:
+ *      template <typename T>
+ *      struct is_relocatable;
+ *
+ *      template <typename P1, typename Size, typename P2>
+ *      void relocate_n(P1 src_first, Size n, P2 dst_first);
+ *
+ *      template <typename P1, typename P2>
+ *      void relocate(P1 src_first, P1 src_last, P2 dst_first);
  */
 
 #pragma once
