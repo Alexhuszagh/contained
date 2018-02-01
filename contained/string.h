@@ -46,6 +46,10 @@ public:
     static constexpr size_type npos = -1;
 
     // Constructors
+    basic_string_facet()
+    {
+        zero();
+    }
     // TODO: implement
 
     // Iterators
@@ -402,12 +406,50 @@ protected:
 
     rep r_;
 
+    // Constructors
+    basic_string_facet(const basic_string_facet&) = delete;
+
+    basic_string_facet(basic_string_facet&& x)
+    noexcept:
+        r_(std::move(x.r_))
+    {
+        x.zero();
+    }
+
+    // Assignment
+    basic_string_facet& operator=(const basic_string_facet&) = delete;
+
+    basic_string_facet&
+    operator=(basic_string_facet&& x)
+    {
+        swap(x);
+        return *this;
+    }
+
+    // Modifiers
+    void
+    swap(basic_string_facet& x)
+    {
+        std::swap(r_, x.r_);
+    }
+
+    // Zero
+    void
+    zero()
+    noexcept
+    {
+        size_type (&a)[n_words] = r_.r.words;
+        for (unsigned i = 0; i < n_words; ++i) {
+            a[i] = 0;
+        }
+    }
+
     // Is long
     bool
     is_long()
     const noexcept
     {
-        return static_cast<bool>(r_.first().s.size_ & short_mask);
+        return static_cast<bool>(r_.s.size_ & short_mask);
     }
 
     // Get long cap
@@ -415,7 +457,7 @@ protected:
     get_long_cap()
     const noexcept
     {
-        return r_.first().l.cap_ & size_type(~long_mask);
+        return r_.l.cap_ & size_type(~long_mask);
     }
 
     // Get long size
@@ -423,7 +465,7 @@ protected:
     get_long_size()
     const noexcept
     {
-        return r_.first().l.size_;
+        return r_.l.size_;
     }
 
     // Set long size
@@ -431,7 +473,7 @@ protected:
     set_long_size(size_type s)
     const noexcept
     {
-        r_.first().l.size_ = s;
+        r_.l.size_ = s;
     }
 
     // Get short size
@@ -440,9 +482,9 @@ protected:
     const noexcept
     {
 #if BYTE_ORDER == BIG_ENDIAN
-        return r_.first().s.size_;
+        return r_.s.size_;
 #else
-        return r_.first().s.size_ >> 1;
+        return r_.s.size_ >> 1;
 #endif
     }
 
@@ -452,9 +494,9 @@ protected:
     const noexcept
     {
 #if BYTE_ORDER == BIG_ENDIAN
-        r_.first().s.size_ = static_cast<unsigned char>(s);
+        r_.s.size_ = static_cast<unsigned char>(s);
 #else
-        r_.first().s.size_ = static_cast<unsigned char>(s << 1);
+        r_.s.size_ = static_cast<unsigned char>(s << 1);
 #endif
     }
 
@@ -463,14 +505,14 @@ protected:
     get_long_pointer()
     noexcept
     {
-        return r_.first().l.data_;
+        return r_.l.data_;
     }
 
     const_pointer
     get_long_pointer()
     const noexcept
     {
-        return r_.first().l.data_;
+        return r_.l.data_;
     }
 
     // Get short pointer
@@ -478,14 +520,14 @@ protected:
     get_short_pointer()
     noexcept
     {
-        return std::pointer_traits<pointer>::pointer_to(r_.first().s.data_[0]);
+        return std::pointer_traits<pointer>::pointer_to(r_.s.data_[0]);
     }
 
     const_pointer
     get_short_pointer()
     const noexcept
     {
-        return std::pointer_traits<const_pointer>::pointer_to(r_.first().s.data_[0]);
+        return std::pointer_traits<const_pointer>::pointer_to(r_.s.data_[0]);
     }
 
     // Get pointer
